@@ -647,6 +647,41 @@ func DecodersSpec(c gospec.Context) {
 		})
 	})
 
+	c.Specify("A syslog SandboxDecoder", func() {
+		decoder := new(SandboxDecoder)
+		conf := decoder.ConfigStruct().(*sandbox.SandboxConfig)
+		conf.ScriptFilename = "../sandbox/lua/testsupport/syslog_decoder.lua"
+		conf.ScriptType = "lua"
+		supply := make(chan *PipelinePack, 1)
+		pack := NewPipelinePack(supply)
+
+		c.Specify("decodes simple messages", func() {
+			data := "Oct 30 17:09:26 somehost.network Google Chrome Helper[36789] <Error>: Process unable to create connection because the sandbox denied the right to lookup com.apple.coreservices.launchservicesd and so this process cannot talk to launchservicesd. : LSXPCClient.cp #426 ___ZN26LSClientToServerConnection21setupServerConnectionEiPK14__CFDictionary_block_invoke() q=com.apple.main-thread"
+			err := decoder.Init(conf)
+			c.Assume(err, gs.IsNil)
+			dRunner := NewMockDecoderRunner(ctrl)
+			decoder.SetDecoderRunner(dRunner)
+			pack.Message.SetPayload(data)
+			err = decoder.Decode(pack)
+			c.Assume(err, gs.IsNil)
+
+			f := pack.Message.FindFirstField("program")
+			c.Expect(f, gs.Not(gs.IsNil))
+			c.Expect(f.GetValue(), gs.Equals, "Google Chrome Helper")
+
+			c.Expect(pack.Message.GetPid(), gs.Equals, int32(36789))
+
+			f = pack.Message.FindFirstField("logsource")
+			c.Expect(f, gs.Not(gs.IsNil))
+			c.Expect(f.GetValue(), gs.Equals, "somehost.network")
+
+			f = pack.Message.FindFirstField("syslog_message")
+			c.Expect(f, gs.Not(gs.IsNil))
+			c.Expect(f.GetValue(), gs.Equals, "Process unable to create connection because the sandbox denied the right to lookup com.apple.coreservices.launchservicesd and so this process cannot talk to launchservicesd. : LSXPCClient.cp #426 ___ZN26LSClientToServerConnection21setupServerConnectionEiPK14__CFDictionary_block_invoke() q=com.apple.main-thread")
+
+		})
+	})
+
 	c.Specify("A StatsToFieldsDecoder", func() {
 		decoder := new(StatsToFieldsDecoder)
 		router := NewMessageRouter()

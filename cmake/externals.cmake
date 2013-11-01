@@ -23,6 +23,15 @@ externalproject_add(
 )
 
 externalproject_add(
+    ndp-1.0
+    URL https://github.com/crankycoder/ndp/archive/releases/1.0.tar.gz
+    URL_MD5 7032d5173771af252fe5b4024b95d268
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+)
+
+externalproject_add(
     lua-cjson-2_1_0
     URL http://www.kyne.com.au/~mark/software/download/lua-cjson-2.1.0.tar.gz
     URL_MD5 24f270663e9f6ca8ba2a02cef19f7963
@@ -39,7 +48,7 @@ externalproject_add(
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_PATH} -DADDRESS_MODEL=${ADDRESS_MODEL} --no-warn-unused-cli
     INSTALL_DIRECTORY ${PROJECT_PATH}
 )
-add_dependencies(lua-5_1_5 lpeg-0_12 lua-cjson-2_1_0)
+add_dependencies(lua-5_1_5 lpeg-0_12 lua-cjson-2_1_0 ndp)
 
 if ("$ENV{GOPATH}" STREQUAL "")
    message(FATAL_ERROR "No GOPATH environment variable has been set. $ENV{GOPATH}")
